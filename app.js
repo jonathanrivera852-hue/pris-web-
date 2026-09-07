@@ -1,25 +1,657 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
-// La pantalla de inicio debe responder incluso si alguna foto tarda en cargar.
+
+// =====================================================
+// PANTALLA DE INICIO
+// =====================================================
+
 const introEl = document.querySelector('#intro');
 const enterBtn = document.querySelector('#enter');
+
 if (enterBtn && introEl) {
   enterBtn.addEventListener('click', () => {
     introEl.classList.add('hidden');
-    setTimeout(() => { introEl.style.display = 'none'; }, 900);
+
+    setTimeout(() => {
+      introEl.style.display = 'none';
+    }, 900);
   });
 }
-const container=document.querySelector('#scene');const scene=new THREE.Scene();scene.fog=new THREE.FogExp2(0x090011,.018);const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,200);camera.position.set(0,0,23);const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);container.appendChild(renderer.domElement);const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.05;controls.minDistance=6;controls.maxDistance=42;controls.enablePan=false;
-const galaxy=new THREE.Group(), photosG=new THREE.Group(), heartG=new THREE.Group();scene.add(galaxy,photosG,heartG);heartG.visible=false;
-// stars
-const starGeo=new THREE.BufferGeometry(), n=1800, pos=new Float32Array(n*3), col=new Float32Array(n*3);for(let i=0;i<n;i++){let r=4+Math.random()*35,a=Math.random()*Math.PI*2,z=(Math.random()-.5)*12;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=Math.sin(a)*r*.55;pos[i*3+2]=z;let c=new THREE.Color().setHSL(.72+Math.random()*.14,.8,.55+Math.random()*.3);col.set([c.r,c.g,c.b],i*3)}starGeo.setAttribute('position',new THREE.BufferAttribute(pos,3));starGeo.setAttribute('color',new THREE.BufferAttribute(col,3));galaxy.add(new THREE.Points(starGeo,new THREE.PointsMaterial({size:.09,vertexColors:true,transparent:true,opacity:.9})));
-const spiralGeo=new THREE.BufferGeometry(), m=2400, sp=new Float32Array(m*3), sc=new Float32Array(m*3);for(let i=0;i<m;i++){let arm=i%3,r=Math.pow(Math.random(),.65)*20,a=arm*2.094+r*.8+(Math.random()-.5)*.8;sp[i*3]=Math.cos(a)*r;sp[i*3+1]=Math.sin(a)*r*.45;sp[i*3+2]=(Math.random()-.5)*(1.4+r*.08);let c=new THREE.Color().setHSL(.74+(Math.random()-.5)*.08,.85,.45+Math.random()*.3);sc.set([c.r,c.g,c.b],i*3)}spiralGeo.setAttribute('position',new THREE.BufferAttribute(sp,3));spiralGeo.setAttribute('color',new THREE.BufferAttribute(sc,3));galaxy.add(new THREE.Points(spiralGeo,new THREE.PointsMaterial({size:.055,vertexColors:true,transparent:true,opacity:.8})));
-const love=['Te amo','Mi cielo','Mi princesa','Eres mi universo','Siempre tú','Mi persona favorita','Te adoro','Mi vida','Contigo todo','Qué suerte tenerte','Cielo bello','Para siempre'];
-const sprites=[];function textSprite(text){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');x.font='700 34px Arial';x.textAlign='center';x.textBaseline='middle';x.shadowColor='#a64dff';x.shadowBlur=18;x.fillStyle='#f3dcff';x.fillText(text,256,64);const t=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false}));s.scale.set(4.2,1.05,1);return s}
-for(let i=0;i<love.length;i++){let s=textSprite(love[i]);let a=i/love.length*Math.PI*2;s.position.set(Math.cos(a)*10,Math.sin(a)*5,(Math.random()-.5)*8);scene.add(s);sprites.push(s)}
-const photos=await fetch('Photos.json').then(r=>{ if(!r.ok) throw new Error('No se pudo cargar photos.json'); return r.json(); }).catch(err=>{ console.error(err); return []; });const loader=new THREE.TextureLoader();const items=[];const total=photos.length;function heartPoint(t){let x=16*Math.pow(Math.sin(t),3),y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);return new THREE.Vector3(x*.52,y*.52,0)}
-photos.forEach((url,i)=>{loader.load(url,tex=>{tex.colorSpace=THREE.SRGBColorSpace;let ratio=tex.image.width/tex.image.height;const h=2.15,w=h*ratio;const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));let a=i/total*Math.PI*2*3,r=5+(i%7)*1.45;let target=new THREE.Vector3(Math.cos(a)*r,Math.sin(a)*r*.52,(i%9-4)*1.2);mesh.position.copy(target);mesh.lookAt(0,0,0);photosG.add(mesh);let hp=heartPoint(i/total*Math.PI*2);hp.z=(i%5-2)*.25;items.push({mesh,galaxy:target,heart:hp});});});
-let mode=0,transition=0;const heartBtn=document.querySelector('#heartBtn');heartBtn.onclick=()=>{mode=mode?0:1;document.body.classList.toggle('heart-mode',!!mode);heartBtn.textContent=mode?'🌌 Volver a galaxia':'❤️ Ver corazón';heartG.visible=false};
-const loveEl=document.querySelector('#love');let li=0;setInterval(()=>{loveEl.textContent=love[li++%love.length]+' ✨'},2600);
-function animate(){requestAnimationFrame(animate);controls.update();transition+=(mode-transition)*.035;items.forEach((o,i)=>{o.mesh.position.lerpVectors(o.galaxy,o.heart,transition);o.mesh.lookAt(camera.position)});sprites.forEach((s,i)=>{let p=1-transition;s.material.opacity=.2+.8*p;s.visible=p>.03});galaxy.rotation.z+=.0009*(1-transition);renderer.render(scene,camera)}animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+
+// =====================================================
+// ESCENA THREE.JS
+// =====================================================
+
+const container = document.querySelector('#scene');
+
+const scene = new THREE.Scene();
+
+scene.fog = new THREE.FogExp2(
+  0x090011,
+  0.018
+);
+
+
+// =====================================================
+// CÁMARA
+// =====================================================
+
+const camera = new THREE.PerspectiveCamera(
+  58,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  200
+);
+
+camera.position.set(0, 0, 23);
+
+
+// =====================================================
+// RENDERER
+// =====================================================
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  alpha: true
+});
+
+renderer.setPixelRatio(
+  Math.min(window.devicePixelRatio, 2)
+);
+
+renderer.setSize(
+  window.innerWidth,
+  window.innerHeight
+);
+
+container.appendChild(renderer.domElement);
+
+
+// =====================================================
+// CONTROLES
+// =====================================================
+
+const controls = new OrbitControls(
+  camera,
+  renderer.domElement
+);
+
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+
+controls.minDistance = 6;
+controls.maxDistance = 42;
+
+controls.enablePan = false;
+
+
+// =====================================================
+// GRUPOS
+// =====================================================
+
+const galaxy = new THREE.Group();
+const photosG = new THREE.Group();
+const heartG = new THREE.Group();
+
+scene.add(galaxy);
+scene.add(photosG);
+scene.add(heartG);
+
+heartG.visible = false;
+
+
+// =====================================================
+// ESTRELLAS
+// =====================================================
+
+const starGeo = new THREE.BufferGeometry();
+
+const starCount = 1800;
+
+const starPositions = new Float32Array(
+  starCount * 3
+);
+
+const starColors = new Float32Array(
+  starCount * 3
+);
+
+for (let i = 0; i < starCount; i++) {
+
+  const r = 4 + Math.random() * 35;
+
+  const a = Math.random() * Math.PI * 2;
+
+  const z = (Math.random() - 0.5) * 12;
+
+  starPositions[i * 3] =
+    Math.cos(a) * r;
+
+  starPositions[i * 3 + 1] =
+    Math.sin(a) * r * 0.55;
+
+  starPositions[i * 3 + 2] = z;
+
+  const c = new THREE.Color().setHSL(
+    0.72 + Math.random() * 0.14,
+    0.8,
+    0.55 + Math.random() * 0.3
+  );
+
+  starColors[i * 3] = c.r;
+  starColors[i * 3 + 1] = c.g;
+  starColors[i * 3 + 2] = c.b;
+}
+
+starGeo.setAttribute(
+  'position',
+  new THREE.BufferAttribute(
+    starPositions,
+    3
+  )
+);
+
+starGeo.setAttribute(
+  'color',
+  new THREE.BufferAttribute(
+    starColors,
+    3
+  )
+);
+
+const starMaterial = new THREE.PointsMaterial({
+  size: 0.09,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.9
+});
+
+galaxy.add(
+  new THREE.Points(
+    starGeo,
+    starMaterial
+  )
+);
+
+
+// =====================================================
+// ESPIRAL DE LA GALAXIA
+// =====================================================
+
+const spiralGeo = new THREE.BufferGeometry();
+
+const spiralCount = 2400;
+
+const spiralPositions = new Float32Array(
+  spiralCount * 3
+);
+
+const spiralColors = new Float32Array(
+  spiralCount * 3
+);
+
+for (let i = 0; i < spiralCount; i++) {
+
+  const arm = i % 3;
+
+  const r =
+    Math.pow(Math.random(), 0.65) * 20;
+
+  const a =
+    arm * 2.094 +
+    r * 0.8 +
+    (Math.random() - 0.5) * 0.8;
+
+  spiralPositions[i * 3] =
+    Math.cos(a) * r;
+
+  spiralPositions[i * 3 + 1] =
+    Math.sin(a) * r * 0.45;
+
+  spiralPositions[i * 3 + 2] =
+    (Math.random() - 0.5) *
+    (1.4 + r * 0.08);
+
+  const c = new THREE.Color().setHSL(
+    0.74 + (Math.random() - 0.5) * 0.08,
+    0.85,
+    0.45 + Math.random() * 0.3
+  );
+
+  spiralColors[i * 3] = c.r;
+  spiralColors[i * 3 + 1] = c.g;
+  spiralColors[i * 3 + 2] = c.b;
+}
+
+spiralGeo.setAttribute(
+  'position',
+  new THREE.BufferAttribute(
+    spiralPositions,
+    3
+  )
+);
+
+spiralGeo.setAttribute(
+  'color',
+  new THREE.BufferAttribute(
+    spiralColors,
+    3
+  )
+);
+
+const spiralMaterial =
+  new THREE.PointsMaterial({
+    size: 0.055,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8
+  });
+
+galaxy.add(
+  new THREE.Points(
+    spiralGeo,
+    spiralMaterial
+  )
+);
+
+
+// =====================================================
+// FRASES DE AMOR
+// =====================================================
+
+const love = [
+  'Te amo',
+  'Mi cielo',
+  'Mi princesa',
+  'Eres mi universo',
+  'Siempre tú',
+  'Mi persona favorita',
+  'Te adoro',
+  'Mi vida',
+  'Contigo todo',
+  'Qué suerte tenerte',
+  'Cielo bello',
+  'Para siempre'
+];
+
+const sprites = [];
+
+function textSprite(text) {
+
+  const canvas =
+    document.createElement('canvas');
+
+  canvas.width = 512;
+  canvas.height = 128;
+
+  const ctx =
+    canvas.getContext('2d');
+
+  ctx.font =
+    '700 34px Arial';
+
+  ctx.textAlign = 'center';
+
+  ctx.textBaseline = 'middle';
+
+  ctx.shadowColor = '#a64dff';
+
+  ctx.shadowBlur = 18;
+
+  ctx.fillStyle = '#f3dcff';
+
+  ctx.fillText(
+    text,
+    256,
+    64
+  );
+
+  const texture =
+    new THREE.CanvasTexture(canvas);
+
+  const sprite =
+    new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthWrite: false
+      })
+    );
+
+  sprite.scale.set(
+    4.2,
+    1.05,
+    1
+  );
+
+  return sprite;
+}
+
+for (let i = 0; i < love.length; i++) {
+
+  const sprite =
+    textSprite(love[i]);
+
+  const angle =
+    i / love.length *
+    Math.PI * 2;
+
+  sprite.position.set(
+    Math.cos(angle) * 10,
+    Math.sin(angle) * 5,
+    (Math.random() - 0.5) * 8
+  );
+
+  scene.add(sprite);
+
+  sprites.push(sprite);
+}
+
+
+// =====================================================
+// FOTOS
+// =====================================================
+
+let photos = [];
+
+try {
+
+  const response =
+    await fetch('./Photos.json');
+
+  if (!response.ok) {
+    throw new Error(
+      'No se pudo cargar Photos.json'
+    );
+  }
+
+  photos = await response.json();
+
+} catch (error) {
+
+  console.error(
+    'Error cargando Photos.json:',
+    error
+  );
+
+  photos = [];
+}
+
+
+const loader =
+  new THREE.TextureLoader();
+
+const items = [];
+
+
+// =====================================================
+// CORAZÓN
+// =====================================================
+
+function heartPoint(t) {
+
+  const x =
+    16 * Math.pow(
+      Math.sin(t),
+      3
+    );
+
+  const y =
+    13 * Math.cos(t)
+    - 5 * Math.cos(2 * t)
+    - 2 * Math.cos(3 * t)
+    - Math.cos(4 * t);
+
+  return new THREE.Vector3(
+    x * 0.52,
+    y * 0.52,
+    0
+  );
+}
+
+
+// =====================================================
+// CREAR FOTOS
+// =====================================================
+
+photos.forEach((url, i) => {
+
+  loader.load(
+    url,
+
+    texture => {
+
+      texture.colorSpace =
+        THREE.SRGBColorSpace;
+
+      const ratio =
+        texture.image.width /
+        texture.image.height;
+
+      const height = 2.15;
+
+      const width =
+        height * ratio;
+
+      const geometry =
+        new THREE.PlaneGeometry(
+          width,
+          height
+        );
+
+      const material =
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+
+      const mesh =
+        new THREE.Mesh(
+          geometry,
+          material
+        );
+
+      const total =
+        Math.max(photos.length, 1);
+
+      const angle =
+        i / total *
+        Math.PI * 2 * 3;
+
+      const radius =
+        5 + (i % 7) * 1.45;
+
+      const target =
+        new THREE.Vector3(
+          Math.cos(angle) * radius,
+          Math.sin(angle) * radius * 0.52,
+          (i % 9 - 4) * 1.2
+        );
+
+      mesh.position.copy(
+        target
+      );
+
+      mesh.lookAt(0, 0, 0);
+
+      photosG.add(mesh);
+
+
+      const heart =
+        heartPoint(
+          i / total *
+          Math.PI * 2
+        );
+
+      heart.z =
+        (i % 5 - 2) * 0.25;
+
+
+      items.push({
+        mesh: mesh,
+        galaxy: target,
+        heart: heart
+      });
+
+    },
+
+    undefined,
+
+    error => {
+
+      console.error(
+        'No se pudo cargar la foto:',
+        url,
+        error
+      );
+
+    }
+  );
+
+});
+
+
+// =====================================================
+// MODO CORAZÓN
+// =====================================================
+
+let mode = 0;
+
+let transition = 0;
+
+const heartBtn =
+  document.querySelector(
+    '#heartBtn'
+  );
+
+if (heartBtn) {
+
+  heartBtn.onclick = () => {
+
+    mode = mode ? 0 : 1;
+
+    document.body.classList.toggle(
+      'heart-mode',
+      !!mode
+    );
+
+    heartBtn.textContent =
+      mode
+        ? '🌌 Volver a galaxia'
+        : '❤️ Ver corazón';
+
+    heartG.visible = false;
+  };
+
+}
+
+
+// =====================================================
+// FRASES CAMBIANTES
+// =====================================================
+
+const loveEl =
+  document.querySelector('#love');
+
+let loveIndex = 0;
+
+setInterval(() => {
+
+  if (!loveEl) return;
+
+  loveEl.textContent =
+    love[
+      loveIndex++ %
+      love.length
+    ] + ' ✨';
+
+}, 2600);
+
+
+// =====================================================
+// ANIMACIÓN
+// =====================================================
+
+function animate() {
+
+  requestAnimationFrame(
+    animate
+  );
+
+  controls.update();
+
+  transition +=
+    (mode - transition) *
+    0.035;
+
+
+  items.forEach(item => {
+
+    item.mesh.position.lerpVectors(
+      item.galaxy,
+      item.heart,
+      transition
+    );
+
+    item.mesh.lookAt(
+      camera.position
+    );
+
+  });
+
+
+  sprites.forEach(sprite => {
+
+    const opacity =
+      0.2 +
+      0.8 *
+      (1 - transition);
+
+    sprite.material.opacity =
+      opacity;
+
+    sprite.visible =
+      opacity > 0.03;
+
+  });
+
+
+  galaxy.rotation.z +=
+    0.0009 *
+    (1 - transition);
+
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+animate();
+
+
+// =====================================================
+// RESIZE
+// =====================================================
+
+window.addEventListener(
+  'resize',
+  () => {
+
+    camera.aspect =
+      window.innerWidth /
+      window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+  }
+);
