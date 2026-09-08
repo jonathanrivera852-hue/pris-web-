@@ -358,12 +358,12 @@ let photos = [];
 
 try {
 
-const response = await fetch('./photos.json');
-
+  const response =
+    await fetch('./photos.json');
 
   if (!response.ok) {
     throw new Error(
-      'No se pudo cargar Photos.json'
+      'No se pudo cargar photos.json'
     );
   }
 
@@ -372,7 +372,7 @@ const response = await fetch('./photos.json');
 } catch (error) {
 
   console.error(
-    'Error cargando Photos.json:',
+    'Error cargando photos.json:',
     error
   );
 
@@ -515,10 +515,10 @@ photos.forEach((url, i) => {
 
 
 // =====================================================
-// MODO CORAZÓN
+// MODO CORAZÓN (botón manual + zoom automático)
 // =====================================================
 
-let mode = 0;
+let manualMode = 0;
 
 let transition = 0;
 
@@ -531,19 +531,13 @@ if (heartBtn) {
 
   heartBtn.onclick = () => {
 
-    mode = mode ? 0 : 1;
-
-    document.body.classList.toggle(
-      'heart-mode',
-      !!mode
-    );
+    manualMode = manualMode ? 0 : 1;
 
     heartBtn.textContent =
-      mode
+      manualMode
         ? '🌌 Volver a galaxia'
         : '❤️ Ver corazón';
 
-    heartG.visible = false;
   };
 
 }
@@ -583,9 +577,32 @@ function animate() {
 
   controls.update();
 
+  // Distancia actual de la cámara respecto al centro de la escena.
+  const dist = camera.position.length();
+
+  // Convierte la distancia (entre minDistance y maxDistance) en un
+  // valor de 0 a 1: 0 = totalmente cerca (galaxia), 1 = totalmente
+  // alejado (corazón). El umbral 28 define a partir de qué distancia
+  // empieza a formarse el corazón; ajústalo si quieres que pase antes
+  // o después al pellizcar/alejar.
+  const zoomFactor = THREE.MathUtils.clamp(
+    (dist - 28) / (controls.maxDistance - 28),
+    0,
+    1
+  );
+
+  // El modo objetivo es el máximo entre el botón manual y el zoom,
+  // así cualquiera de los dos puede activar el corazón.
+  const targetMode = Math.max(manualMode, zoomFactor);
+
   transition +=
-    (mode - transition) *
+    (targetMode - transition) *
     0.035;
+
+  document.body.classList.toggle(
+    'heart-mode',
+    transition > 0.5
+  );
 
 
   items.forEach(item => {
@@ -655,3 +672,4 @@ window.addEventListener(
 
   }
 );
+
