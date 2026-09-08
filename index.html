@@ -58,7 +58,17 @@
     Aleja la vista para descubrir nuestro corazón 💜
   </div>
 
-  <script type="module" src="App.js"></script>
+  <script>
+  document.getElementById('enter').addEventListener('click', function () {
+    document.getElementById('intro').classList.add('hidden');
+
+    setTimeout(function () {
+      document.getElementById('intro').style.display = 'none';
+    }, 900);
+  });
+</script>
+
+<script type="module" src="App.js"></script>
 
 </body>
 </html>
