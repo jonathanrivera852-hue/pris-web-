@@ -358,8 +358,8 @@ let photos = [];
 
 try {
 
-  const response =
-    await fetch('./Photos.json');
+const response = await fetch('./photos.json');
+
 
   if (!response.ok) {
     throw new Error(
