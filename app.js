@@ -3,24 +3,6 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/exampl
 
 
 // =====================================================
-// PANTALLA DE INICIO
-// =====================================================
-
-const introEl = document.querySelector('#intro');
-const enterBtn = document.querySelector('#enter');
-
-if (enterBtn && introEl) {
-  enterBtn.addEventListener('click', () => {
-    introEl.classList.add('hidden');
-
-    setTimeout(() => {
-      introEl.style.display = 'none';
-    }, 900);
-  });
-}
-
-
-// =====================================================
 // ESCENA THREE.JS
 // =====================================================
 
@@ -93,13 +75,9 @@ controls.enablePan = false;
 
 const galaxy = new THREE.Group();
 const photosG = new THREE.Group();
-const heartG = new THREE.Group();
 
 scene.add(galaxy);
 scene.add(photosG);
-scene.add(heartG);
-
-heartG.visible = false;
 
 
 // =====================================================
@@ -387,32 +365,6 @@ const items = [];
 
 
 // =====================================================
-// CORAZÓN
-// =====================================================
-
-function heartPoint(t) {
-
-  const x =
-    16 * Math.pow(
-      Math.sin(t),
-      3
-    );
-
-  const y =
-    13 * Math.cos(t)
-    - 5 * Math.cos(2 * t)
-    - 2 * Math.cos(3 * t)
-    - Math.cos(4 * t);
-
-  return new THREE.Vector3(
-    x * 0.52,
-    y * 0.52,
-    0
-  );
-}
-
-
-// =====================================================
 // CREAR FOTOS
 // =====================================================
 
@@ -479,21 +431,8 @@ photos.forEach((url, i) => {
 
       photosG.add(mesh);
 
-
-      const heart =
-        heartPoint(
-          i / total *
-          Math.PI * 2
-        );
-
-      heart.z =
-        (i % 5 - 2) * 0.25;
-
-
       items.push({
-        mesh: mesh,
-        galaxy: target,
-        heart: heart
+        mesh: mesh
       });
 
     },
@@ -512,35 +451,6 @@ photos.forEach((url, i) => {
   );
 
 });
-
-
-// =====================================================
-// MODO CORAZÓN (botón manual + zoom automático)
-// =====================================================
-
-let manualMode = 0;
-
-let transition = 0;
-
-const heartBtn =
-  document.querySelector(
-    '#heartBtn'
-  );
-
-if (heartBtn) {
-
-  heartBtn.onclick = () => {
-
-    manualMode = manualMode ? 0 : 1;
-
-    heartBtn.textContent =
-      manualMode
-        ? '🌌 Volver a galaxia'
-        : '❤️ Ver corazón';
-
-  };
-
-}
 
 
 // =====================================================
@@ -577,41 +487,7 @@ function animate() {
 
   controls.update();
 
-  // Distancia actual de la cámara respecto al centro de la escena.
-  const dist = camera.position.length();
-
-  // Convierte la distancia (entre minDistance y maxDistance) en un
-  // valor de 0 a 1: 0 = totalmente cerca (galaxia), 1 = totalmente
-  // alejado (corazón). El umbral 28 define a partir de qué distancia
-  // empieza a formarse el corazón; ajústalo si quieres que pase antes
-  // o después al pellizcar/alejar.
-  const zoomFactor = THREE.MathUtils.clamp(
-    (dist - 28) / (controls.maxDistance - 28),
-    0,
-    1
-  );
-
-  // El modo objetivo es el máximo entre el botón manual y el zoom,
-  // así cualquiera de los dos puede activar el corazón.
-  const targetMode = Math.max(manualMode, zoomFactor);
-
-  transition +=
-    (targetMode - transition) *
-    0.035;
-
-  document.body.classList.toggle(
-    'heart-mode',
-    transition > 0.5
-  );
-
-
   items.forEach(item => {
-
-    item.mesh.position.lerpVectors(
-      item.galaxy,
-      item.heart,
-      transition
-    );
 
     item.mesh.lookAt(
       camera.position
@@ -619,27 +495,7 @@ function animate() {
 
   });
 
-
-  sprites.forEach(sprite => {
-
-    const opacity =
-      0.2 +
-      0.8 *
-      (1 - transition);
-
-    sprite.material.opacity =
-      opacity;
-
-    sprite.visible =
-      opacity > 0.03;
-
-  });
-
-
-  galaxy.rotation.z +=
-    0.0009 *
-    (1 - transition);
-
+  galaxy.rotation.z += 0.0009;
 
   renderer.render(
     scene,
@@ -672,4 +528,5 @@ window.addEventListener(
 
   }
 );
+
 
