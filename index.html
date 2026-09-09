@@ -70,6 +70,8 @@
     ☝️ Arrastra para girar · 🤏 Pellizca para acercarte
   </div>
 
+  <audio id="bgMusic" src="song.mp3" preload="auto" loop></audio>
+
   <script>
   const introEl = document.getElementById('intro');
   const codeGateEl = document.getElementById('codeGate');
@@ -77,12 +79,16 @@
   const codeInput = document.getElementById('codeInput');
   const codeSubmit = document.getElementById('codeSubmit');
   const codeError = document.getElementById('codeError');
+  const bgMusic = document.getElementById('bgMusic');
 
   const CORRECT_CODE = '111125';
 
   enterBtn.addEventListener('click', function () {
     introEl.classList.add('hidden');
     codeGateEl.classList.remove('hidden');
+
+    bgMusic.volume = 0.5;
+    bgMusic.play().catch(function () {});
 
     setTimeout(function () {
       introEl.style.display = 'none';
