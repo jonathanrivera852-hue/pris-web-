@@ -20,7 +20,7 @@
 
 <body>
 
-  <div id="intro">
+  <div id="intro" class="overlay-screen">
     <div class="intro-card">
       <div class="heart">💜</div>
 
@@ -34,9 +34,25 @@
     </div>
   </div>
 
-  <div id="hud">
-    <div>💜 PRIS</div>
-    <button id="heartBtn">❤️ Ver corazón</button>
+  <div id="codeGate" class="overlay-screen hidden">
+    <div class="intro-card">
+      <div class="heart">🔒</div>
+
+      <p>Ah pero no es tan fácil… para verlo tienes que colocar la fecha en que te escribí la primera vez</p>
+
+      <input
+        type="tel"
+        id="codeInput"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="______"
+        autocomplete="off"
+      >
+
+      <button id="codeSubmit">Entrar 💜</button>
+
+      <p id="codeError" class="code-error hidden">Esa no es la fecha… intenta de nuevo</p>
+    </div>
   </div>
 
   <div id="scene"></div>
@@ -45,7 +61,7 @@
     <span>💜</span>
     <h2>
       Feliz cumpleaños<br>
-      cielo bello
+      te amo
     </h2>
     <p id="love">Te amo ✨</p>
   </div>
@@ -54,22 +70,49 @@
     ☝️ Arrastra para girar · 🤏 Pellizca para acercarte
   </div>
 
-  <div id="heartHint">
-    Aleja la vista para descubrir nuestro corazón 💜
-  </div>
-
   <script>
-  document.getElementById('enter').addEventListener('click', function () {
-    document.getElementById('intro').classList.add('hidden');
+  const introEl = document.getElementById('intro');
+  const codeGateEl = document.getElementById('codeGate');
+  const enterBtn = document.getElementById('enter');
+  const codeInput = document.getElementById('codeInput');
+  const codeSubmit = document.getElementById('codeSubmit');
+  const codeError = document.getElementById('codeError');
+
+  const CORRECT_CODE = '111125';
+
+  enterBtn.addEventListener('click', function () {
+    introEl.classList.add('hidden');
+    codeGateEl.classList.remove('hidden');
 
     setTimeout(function () {
-      document.getElementById('intro').style.display = 'none';
+      introEl.style.display = 'none';
+      codeInput.focus();
     }, 900);
+  });
+
+  function checkCode() {
+    if (codeInput.value.trim() === CORRECT_CODE) {
+      codeGateEl.classList.add('hidden');
+
+      setTimeout(function () {
+        codeGateEl.style.display = 'none';
+      }, 900);
+    } else {
+      codeError.classList.remove('hidden');
+      codeInput.value = '';
+      codeInput.focus();
+    }
+  }
+
+  codeSubmit.addEventListener('click', checkCode);
+
+  codeInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') checkCode();
   });
 </script>
 
 <script type="module" src="app.js"></script>
 
-
 </body>
 </html>
+
